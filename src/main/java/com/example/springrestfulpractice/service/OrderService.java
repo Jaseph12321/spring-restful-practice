@@ -1,7 +1,12 @@
 package com.example.springrestfulpractice.service;
 
-import com.example.springrestfulpractice.model.Meal;
-import com.example.springrestfulpractice.model.Order;
+import com.example.springrestfulpractice.controller.request.CreateOrderRequest;
+import com.example.springrestfulpractice.controller.request.UpdateOrderRequest;
+import com.example.springrestfulpractice.model.MealRepository;
+import com.example.springrestfulpractice.model.OrderRepository;
+import com.example.springrestfulpractice.model.mealEntity.Meal;
+import com.example.springrestfulpractice.model.orderEntity.Order;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,66 +16,78 @@ import java.util.List;
 public class OrderService {
      List<Order> orderList = new ArrayList<>();
 
-     public OrderService(){
-         List<Meal> meal = new ArrayList<>();
-         meal.add(new Meal("candy",100,"sweet~~"));
-         meal.add(new Meal("cookie",200,"cracky~~"));
-         this.orderList.add(new Order(1,300,"Jaseph",meal));
 
-         List<Meal> meal2 = new ArrayList<>();
-         meal2.add(new Meal("hamburger",200,"yum~~"));
-         meal2.add(new Meal("rice",300,"bright~~"));
+     @Autowired
+     private OrderRepository orderRepository;
+
+     @Autowired
+     private MealRepository mealRepository;
 
 
-         this.orderList.add(new Order(2,500,"Ivy",meal2));
 
+
+     public List<Meal> getAllMeals() {
+         List<Meal> response= mealRepository.findAll();
+         return response;
+     }
+     public List<Order> getAllOrders(){
+         List<Order> response = orderRepository.findAll();
+         return response;
      }
 
-     public List<Order> getAllOrders(){return this.orderList;}
-
     public Order getOrder(int seq){
-         for(Order order:this.orderList){
-             if(seq == order.getSeq()){
-                 return order;
-             }
-         }
+         Order order = this.orderRepository.findById(seq);
 
-        return null;
-    }
-
-    public Order getOrderbyId(int seq){
-         for(Order order: this.orderList){
-             if(seq == order.getSeq()){
-                 return order;
-             }
-         }
-         return null;
-    }
-
-    public Order createOrder(Order order){
-        this.orderList.add(order);
         return order;
     }
 
-    public Order updateOrder(int seq, Order order){
-          for(Order updateOrder: this.orderList){
-              if(seq == updateOrder.getSeq()){
-                  updateOrder.setTotalPrice(order.getTotalPrice());
-                  updateOrder.setWaiter(order.getWaiter());
-                  updateOrder.setMealList(order.getMealList());
-                  return updateOrder;
-              }
-          }
-            return null;
+
+
+    public String createOrder(CreateOrderRequest request){
+        Order order = new Order();
+
+        order.setSeq(request.getSeq());
+        order.setWaiter(request.getWaiter());
+        order.setMeal_List(request.getMeal_List());
+        order.setTotalPrice(getTotalPrice(order));
+
+
+        orderRepository.save(order);
+
+        return "OK";
     }
 
-    public Order deleteOrder(int seq){
-        for(Order deleteOrder: this.orderList){
-            if(seq== deleteOrder.getSeq()){
-                this.orderList.remove(deleteOrder);
-                return deleteOrder;
+    public String updateOrder(int seq, UpdateOrderRequest request){
+            Order updateOrder = this.orderRepository.findById(seq);
+            updateOrder.setWaiter(request.getWaiter());
+            updateOrder.setMeal_List(request.getMeal_List());
+            updateOrder.setTotalPrice(getTotalPrice(updateOrder));
+
+
+        orderRepository.save(updateOrder);
+            return "updated";
+    }
+//
+    public String deleteOrder(int seq){
+        Order order = this.orderRepository.deleteById(seq);
+        return "deleted";
+    }
+
+
+    public  int getTotalPrice(Order order) {
+        int total = 0;
+        List<Meal> meals = mealRepository.findAll();
+        String mealList = order.getMeal_List();
+        String[] s = mealList.split(" ");
+        for(String i :s){
+            for(Meal meal : meals){
+                if(i.equals(meal.getName())){
+                    total+=meal.getPrice();
+                }
             }
         }
-        return null;
+
+        return total;
     }
+
 }
