@@ -6,11 +6,15 @@ import com.example.springrestfulpractice.model.MealRepository;
 import com.example.springrestfulpractice.model.OrderRepository;
 import com.example.springrestfulpractice.model.mealEntity.Meal;
 import com.example.springrestfulpractice.model.orderEntity.Order;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OrderService {
@@ -35,16 +39,19 @@ public class OrderService {
          return response;
      }
 
-    public Order getOrder(int seq){
+    public String getOrder(int seq){
          Order order = this.orderRepository.findById(seq);
-
-        return order;
+         if(0== orderList.size()){
+             return setResponsedata("0001","order not found",order);
+         }
+        return setResponsedata("0000","successful",order);
     }
 
 
 
     public String createOrder(CreateOrderRequest request){
         Order order = new Order();
+
 
         order.setSeq(request.getSeq());
         order.setWaiter(request.getWaiter());
@@ -88,6 +95,25 @@ public class OrderService {
         }
 
         return total;
+    }
+
+    public String setResponsedata(String returnCode, String returnMsg, Order order){
+         JSONObject object = new JSONObject();
+         object.put("returnCode", returnCode);
+         object.put("returnMsg", returnMsg);
+
+         if(order != null){
+             JSONArray list = new JSONArray();
+             Map m = new HashMap();
+             m.put("seq", order.getSeq());
+             m.put("Waiter", order.getWaiter());
+             m.put("totalPrice", order.getTotalPrice());
+             m.put("mealList", order.getMeal_List());
+             list.put(m);
+             object.put("queryresult", list);
+         }
+
+         return object.toString();
     }
 
 }
