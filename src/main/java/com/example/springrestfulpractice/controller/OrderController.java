@@ -7,7 +7,11 @@ import com.example.springrestfulpractice.model.mealEntity.Meal;
 import com.example.springrestfulpractice.model.orderEntity.Order;
 import com.example.springrestfulpractice.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -21,19 +25,33 @@ public class OrderController {
     @GetMapping("/menu")
     public List<Meal> getAllMeals() {
         List<Meal> mealList = this.orderService.getAllMeals();
+        if(mealList.size() == 0){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"No menu found~~");
+        }
         return mealList;
     }
 
     @GetMapping
     public List<Order> getAllOrders(){
         List<Order> orderList = this.orderService.getAllOrders();
+        if(orderList.size() == 0){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not Found");
+        }
         return orderList;
     }
 
     @GetMapping("/{seq}")
-    public Order getOrderById(@PathVariable int seq){
-        Order getOrder = this.orderService.getOrder(seq);
-        return getOrder;
+    public ResponseEntity<String> getOrderById(@PathVariable int seq){
+        try{
+            String order = this.orderService.getOrder(seq);
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(order);
+        }catch(Exception e){
+            System.out.println(e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
+        }
     }
 
     @PostMapping()
